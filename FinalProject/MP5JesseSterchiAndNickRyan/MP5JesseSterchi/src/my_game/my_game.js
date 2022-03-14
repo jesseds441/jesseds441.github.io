@@ -68,18 +68,30 @@ class MyGame extends engine.Scene {
         this.mCamera.setWCCenter(100, 100);
 
         // Can push text manually
-        this.mTextArray.push(new engine.Text("HUNNIGAN: Leon. It's been 6 hours since our last transmission. "
-        + "I was starting to get worried", [.5, .7, .5, 1], "text", true, this.kHunnigan));
+        // Parameters: the raw string content to be displayed, the color (as a color array), what type of text, 
+        // whether or not to be paused, the speaker image, and the set number 
+        this.mTextArray.push(new engine.Text("HUNNIGAN:", [.6, .2, .9, 1], "text", true, this.kHunnigan, 0));
 
-        this.mTextArray.push(new engine.Text("LEON: Don't you mean lonely? Anyway, I started to feel dizzy. "
-        + "And then I guess I must have lost consciousness.", [.5, .5, .7, 1], "text", true, this.kLeon));
+        this.mTextArray.push(new engine.Text(" Leon. It's been 6 hours since our last transmission. "
+        + "I was starting to get worried.", [.3, .3, .3, 1], "text", true, this.kHunnigan, 0));
 
-        this.mTextArray.push(new engine.Text("HUNNIGAN: Lost consciousness? Maybe it has some connection " +
-        "to what the village chief was talking about...?", [.5, .7, .5, 1], "text", true, this.kHunnigan));
 
-        this.mTextArray.push(new engine.Text("LEON: Can't say. But I'm all right now. I'm gonna continue my mission.",
-         [.5, .5, .7, 1], "text", true, this.kLeon));
-        
+        this.mTextArray.push(new engine.Text("LEON:", [.1, .3, .8, 1], "text", true, this.kLeon, 1));
+
+        this.mTextArray.push(new engine.Text(" Don't you mean lonely? Anyway, I started to feel dizzy. "
+        + "And then I guess I must have lost consciousness.", [.3, .3, .3, 1], "text", true, this.kLeon, 1));  
+
+        this.mTextArray.push(new engine.Text("HUNNIGAN:", [.6, .2, .9, 1], "text", true, this.kHunnigan, 0));
+
+        this.mTextArray.push(new engine.Text(" Lost consciousness? Maybe it has some connection " +
+        "to what the village chief was talking about...?", [.3, .3, .3, 1], "text", true, this.kHunnigan, 0));
+
+
+        this.mTextArray.push(new engine.Text("LEON:", [.1, .3, .8, 1], "text", true, this.kLeon, 1));
+
+        this.mTextArray.push(new engine.Text( " Can't say. But I'm all right now. I'm gonna continue my mission.", 
+        [.3, .3, .3, 1], "text", true, this.kLeon, 1));
+
         this.mBg = new TextureRenderable(this.kBg);
         this.mBg.getXform().setSize(200, 110);
         this.mBg.getXform().setPosition(30, 55);
@@ -87,7 +99,6 @@ class MyGame extends engine.Scene {
 
         // set up text renderable
         this.mTest = new TextRenderable(this.kTextBox, this.mTextArray, 5, -22.5);
-        this.mTest.setDefaultColor([1, 1, 1, 1]);
         this.mTest.setTextHeight(6);
  
     }

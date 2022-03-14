@@ -5,7 +5,7 @@
  * 
  */
 class Text {
-    constructor(content, color, type, doesPause, speakerImage) {
+    constructor(content, color, type, doesPause, speakerImage, counter) {
 
         // The raw string content to be displayed
         this.mContent = content;
@@ -17,9 +17,16 @@ class Text {
         this.mDoesPause = doesPause;
         // speaker image
         this.mSpeakerImage = speakerImage;
+        //tracks when to switch to next textbox
+        this.mCounter = counter;
     }
 
     // getters 
+
+    getCounter() {
+        return this.mCounter;
+    }
+
     getContent() {
         return this.mContent;
     }
@@ -47,6 +54,10 @@ class Text {
     // setters
     setContent(content) {
         this.mContent = content;
+    }
+
+    setCounter(counter) {
+        this.mCounter = counter;
     }
 
     setType(type) {

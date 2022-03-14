@@ -14,6 +14,7 @@ import FontRenderable from "./font_renderable.js";
 import * as defaultResources from "../resources/default_resources.js";
 import * as font from "../resources/font.js";
 import engine from "../index.js";
+import { waitOnPromises } from "../core/resource_map.js";
 
 class TextRenderable {
     constructor(background, text, xPos, yPos) {
@@ -27,7 +28,6 @@ class TextRenderable {
 
         this.mBackground.getXform().setPosition(xPos, yPos);
        
-
         this.mTextBoxXCor = xPos;
         this.mTextBoxYCor = yPos;
 
@@ -60,22 +60,23 @@ class TextRenderable {
         // other display options
         this.mDefaultColor = null;
         this.mTextHeight = this.mTextDisplay.getXform().getHeight();
-        this.mDelayTime = null;
+
+        this.mCurrentCounter = 0;
 
         this.mIsPaused = this.mCurrentText.getDoesPause();
 
-        //timer 
-        let currentTime = performance.now();
-        this.mCreationTime = currentTime;
-        this.mTimePassed = 0;
+        // flow control
+        this.mIsFinished = false;
+        this.mTextObjCount = 1;
+        this.mCharCount = 0;
 
         // Text display coordinates
         this.mTextX = this.mTextBoxXCor - (this.mBackground.getXform().getWidth() * .46);
         this.mTextY = this.mTextBoxYCor + (this.mBackground.getXform().getHeight() * .35);
     }
 
+    
     draw(camera) {
-
 
         // first, draw the textbox 
         this.mBackground.draw(camera);
@@ -89,36 +90,90 @@ class TextRenderable {
 
         this.mStringX = this.mTextDisplay.getXform().getXPos();
         this.mStringY = this.mTextDisplay.getXform().getYPos();
+
+        let i = 0;
+        let allTexts = [];
+
+        // get all text objects for this display
+        while (this.mTextArray.length > i
+            && this.mTextArray[i].getCounter() == this.mCurrentCounter) {
+
+            allTexts.push(this.mTextArray[i]);
+            i++;
+        }
        
-        for (let i = 0; i < this.mCurrentText.getContent().length; i++) {
-            let text = this.mCurrentText.getContent();
-            this.setAssociatedImage(this.mCurrentText.getSpeakerImage());
-            this.mTextDisplay.setText(text[i]);
-            this.setDefaultColor(this.mCurrentText.getColor());
+        // for all text objects for this display box
+        for (let num = 0; num < this.mTextObjCount; num++) {
 
-            // if (this.mTimePassed >= this.mDelayTime) {
-            this.mTextDisplay.draw(camera);
-           
+            let numChars = 0;
 
-            if (text[i] == " ") {
-                this.mStringArray.shift();
-                this.mCurrentString = this.mStringArray[0];
-
-                this.mStringX = this.mTextDisplay.getXform().getXPos();
-                this.mStringY = this.mTextDisplay.getXform().getYPos();
+            if (this.mTextObjCount - 1> num) {
+                numChars = allTexts[num].getContent().length;
+            }
+            else {
+                numChars = this.mCharCount;
             }
 
-            // use fitToSpace()
-            this.fitToSpace();
+            // for each character in text object
+            for (let i = 0; i < numChars; i++) {
 
-            console.log(String(this.mCurrentString));
+                let text = allTexts[num].getContent();
+                this.setAssociatedImage(allTexts[num].getSpeakerImage());
+                console.log("i " + i)
+                this.mTextDisplay.setText(text[i]);
+                this.setDefaultColor(allTexts[num].getColor());
+
+                this.mTextDisplay.draw(camera);
+
+    
+                // Keep track of what word we're on for fitToSpace()
+                if (text[i] == " ") {
+                    this.mStringArray.shift();
+                    this.mCurrentString = this.mStringArray[0];
+    
+                    this.mStringX = this.mTextDisplay.getXform().getXPos();
+                    this.mStringY = this.mTextDisplay.getXform().getYPos();
+                }
+    
+                // ensure text will fit to box
+                this.fitToSpace();
+    
+            }
         }
 
-        if (this.mTextArray.length - 1 > 0 && !this.mIsPaused) {
-           
-            this.mTextArray.shift();
+        if (allTexts[this.mTextObjCount - 1].getContent().length > this.mCharCount ) {
 
-            this.mCurrentText = this.mTextArray[0];
+            this.mCharCount++;
+        }
+        else if (allTexts.length > this.mTextObjCount) {
+
+            this.mTextObjCount++;
+            this.mCharCount = 0;
+        }
+        
+
+        if (this.mTextArray.length - 1 > 0 && !this.mIsPaused) { 
+
+            if (this.mTextArray.length != allTexts.length) {
+
+                // pop off all used text objects
+                while (this.mTextArray[0].getCounter() == this.mCurrentCounter) {
+                
+                    this.mTextArray.shift();
+                }
+
+                this.mCurrentText = this.mTextArray[0];
+                
+                if (this.mCurrentCounter == 0) {
+                    this.mCurrentCounter = 1;
+                }
+                else {
+                    this.mCurrentCounter = 0;
+                }
+
+                this.mCharCount = 0;
+                this.mTextObjCount = 1;
+            }
 
             // Track word
             this.mStringArray = String(this.mCurrentText.getContent()).split(" ");
@@ -129,10 +184,8 @@ class TextRenderable {
         }
  
     }
-
+    
     update() {
-        let currentTime = performance.now();
-        this.mTimePassed = currentTime - this.mCreationTime;
 
         if (engine.input.isButtonClicked(engine.input.eMouseButton.eLeft)) {
             this.mIsPaused = false;
@@ -144,13 +197,8 @@ class TextRenderable {
         let y = this.mTextDisplay.getXform().getYPos();
         let h = this.mTextDisplay.getXform().getHeight(); 
         let w = this.mTextDisplay.getXform().getWidth(); 
-
-        // console.log(this.mStringX + (w * String(this.mCurrentString).length));
-        // console.log(this.mTextBoxXCor
-        //     + this.mBackground.getXform().getWidth() / 2)
-
-        console.log(this.mTextDisplay);
         
+        // check if the word will fit in the box
         if (this.mStringX + (w * String(this.mCurrentString).length + 1) > this.mTextBoxXCor
          + this.mBackground.getXform().getWidth() * .55) {
              // move down a line
@@ -201,10 +249,24 @@ class TextRenderable {
         this.mTextArray.push(text);
     }
 
-    clearText() {
+    clear() {
         this.mTextArray.splice(0, this.mTextArray.length);
     }
 
 }
+
+// function sleep(time) {
+//     return new Promise(
+//       resolve => setTimeout(resolve, time)
+//     );
+//   }
+  
+
+// async function writeChar(time, text, camera) {
+
+//     await sleep(time);
+
+//     text.draw(camera);
+// }
 
 export default TextRenderable;
