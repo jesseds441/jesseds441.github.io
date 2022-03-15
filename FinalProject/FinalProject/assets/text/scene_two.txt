@@ -1,0 +1,31 @@
+id(dialog_1)
+init(start)
+default(blue, img)
+chunk(start,
+        "this is the first sentence in a default format",
+        {this sentence is customized : [0.0, 1.0, 0.0, 1.0],F,assets/f_walk.png},
+        "this is the last sentence.",
+        <the next chunk | next_chunk>
+    )
+    chunk(next_chunk,
+        "this is the first sentence of a different chunk",
+        {this sentence is customized but differently : [1.0, 0.0, 0.0, 1.0],F,assets/f_walk.png},
+        "this is the last sentence.",
+        "or is it?????",
+        #Please select an option with the number keys: 1 - option_a, 2 - option_b, 3 - option_c | option_a,option_b,option_c#
+    )
+    chunk(option_a,
+        "WELCOME TO OPTION A",
+        "Please don't stay long",
+        <doesn't matter | END>
+    )
+    chunk(option_b,
+        "WELCOME TO OPTION B",
+        "Stay as long as you like",
+        <doesn't matter | END>
+    )
+    chunk(option_c,
+        "WELCOME TO OPTION C",
+        "Can't believe you found us",
+        <doesn't matter | END>
+    )
